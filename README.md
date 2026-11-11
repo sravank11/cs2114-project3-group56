@@ -9,7 +9,7 @@
 
 ## Next Steps
 - What is left to finish the MVP? The MVP is generally finished
-- Your change feature: 
+- Your change feature: Although we mentioned VIP customers in our stretch goals, for our change feature instead of having those VIPs in the regular queue, there could be a second priority queue. This would change Customer, Game, and GameWindow.
 - Which stretch goals will you attempt? We will focus on creating a usable GUI, high scores, VIP customers, and adding different difficulties are going to be the stretch goals we pursue for now. Other ones we had listed may be attempted as well if we have time.
 - What new tests will you need? Tests mainly for making sure the GUI works together with the game code, if the VIP customers actually give more points, and tests for if high scores save over different games.
 - Who does what? We will all work on the GUI a bit, Matthew Li will work on the difficulties, Matthew Lee will work on the high scores, and Sravan will work on the VIP customers.
