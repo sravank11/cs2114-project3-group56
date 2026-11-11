@@ -43,9 +43,9 @@
 | MenuItem | Matthew Lee | Written and checked with GenAi assistance, JavaDocs done by GenAI |
 | CustomerState | Matthew Lee | Written and checked with GenAi assistance, JavaDocs done by GenAI |
 | ServeResult | Mathew Lee |  Written and checked with GenAi assistance, JavaDocs done by GenAI  |
-| GameListener | Sravan |  |
-| GameWindow | Sravan  |    |
-| GameController | Sravan |     |
-| Main | Sravan |     |
+| GameListener | Sravan | Drafted and wrote with GenAI Assistance, GenAI did JavaDocs |
+| GameWindow | Sravan  |  Drafted and wrote with GenAI Assistance, GenAI did JavaDocs  |
+| GameController | Sravan |  Drafted and wrote with GenAI Assistance, GenAI did JavaDocs   |
+| Main | Sravan |   Drafted and wrote with GenAI Assistance, GenAI did JavaDocs  |
 
-
+GenAI Note: Used to assist in writing code and formatting JavaDocs
