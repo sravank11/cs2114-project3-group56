@@ -31,10 +31,10 @@ public class OrderTest extends student.TestCase
      */
     public void testConstructor()
     {
-        assertEquals(Integer.valueOf(1),
-            order.getItems().get(MenuItem.BURGER));
-        assertEquals(Integer.valueOf(1),
-            order.getItems().get(MenuItem.FRIES));
+        assertEquals(1,
+            (int) order.getItems().get(MenuItem.BURGER));
+        assertEquals(1,
+            (int) order.getItems().get(MenuItem.FRIES));
         assertFalse(order.getItems().containsKey(MenuItem.DRINK));
     }
 
@@ -106,8 +106,8 @@ public class OrderTest extends student.TestCase
 
         items.put(MenuItem.BURGER, 5);
 
-        assertEquals(Integer.valueOf(1),
-            newOrder.getItems().get(MenuItem.BURGER));
+        assertEquals(1,
+            (int) newOrder.getItems().get(MenuItem.BURGER));
     }
 
 
@@ -213,7 +213,14 @@ public class OrderTest extends student.TestCase
      */
     public void testCompareToTrayNull()
     {
-        assertEquals(ServeResult.FAILED_ORDER,
-            order.compareToTray(null));
+        try
+        {
+            order.compareToTray(null);
+            fail("compareToTray(null) should throw");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertNotNull(e.getMessage());
+        }
     }
 }

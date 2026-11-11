@@ -40,6 +40,9 @@ public class GameWindow extends JFrame implements GameListener
     private final JButton refundButton = new JButton("Refund / Remove");
     private final JButton clearButton = new JButton("Clear Tray");
     private final java.util.List<JButton> foodButtons = new java.util.ArrayList<>();
+    // True while refresh() rebuilds the list, so the selection events it
+    // causes don't disable the action buttons mid-click
+    private boolean rebuildingList = false;
 
     public GameWindow(Game game, GameController controller)
     {
@@ -64,7 +67,7 @@ public class GameWindow extends JFrame implements GameListener
 
         customerList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         customerList.addListSelectionListener(event -> {
-            if (!event.getValueIsAdjusting())
+            if (!event.getValueIsAdjusting() && !rebuildingList)
             {
                 refreshSelection();
             }
@@ -170,28 +173,36 @@ public class GameWindow extends JFrame implements GameListener
     {
         Customer previous = selectedCustomer();
         int previousId = previous == null ? -1 : previous.getId();
-        customerRows.clear();
-        int indexToSelect = -1;
-        java.util.List<Customer> customers = game.getCustomers();
-        for (int i = 0; i < customers.size(); i++)
+        rebuildingList = true;
+        try
         {
-            Customer customer = customers.get(i);
-            customerRows.addElement("#" + customer.getId() + "  "
-                + customer.getState() + "  "
-                + String.format("%.1f", customer.getPatienceMs() / 1000.0)
-                + "s remaining" + (i == 0 ? "  [FRONT]" : ""));
-            if (customer.getId() == previousId)
+            customerRows.clear();
+            int indexToSelect = -1;
+            java.util.List<Customer> customers = game.getCustomers();
+            for (int i = 0; i < customers.size(); i++)
             {
-                indexToSelect = i;
+                Customer customer = customers.get(i);
+                customerRows.addElement("#" + customer.getId() + "  "
+                    + customer.getState() + "  "
+                    + String.format("%.1f", customer.getPatienceMs() / 1000.0)
+                    + "s remaining" + (i == 0 ? "  [FRONT]" : ""));
+                if (customer.getId() == previousId)
+                {
+                    indexToSelect = i;
+                }
+            }
+            if (indexToSelect < 0 && !customers.isEmpty())
+            {
+                indexToSelect = 0;
+            }
+            if (indexToSelect >= 0)
+            {
+                customerList.setSelectedIndex(indexToSelect);
             }
         }
-        if (indexToSelect < 0 && !customers.isEmpty())
+        finally
         {
-            indexToSelect = 0;
-        }
-        if (indexToSelect >= 0)
-        {
-            customerList.setSelectedIndex(indexToSelect);
+            rebuildingList = false;
         }
         scoreLabel.setText("Score: " + game.getScore() + "    Strikes: "
             + game.getStrikes() + "/" + Game.MAX_STRIKES
