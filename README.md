@@ -1,5 +1,23 @@
 # cs2114-project3-group56
 
+## Instructions
+
+### Running the Game (View)
+1. Download or clone the project from GitHub.
+2. Open Eclipse and import the project using **File → Import → General → Existing Projects into Workspace**.
+3. Make sure the `src` folder is recognized as a source folder.
+4. Open `Main.java` in the `app` package.
+5. Right-click `Main.java` and select **Run As → Java Application**.
+6. The Order Rush game window should open. Players can add food to the tray, serve customers, and see their score and remaining customer patience.
+
+### Running the Model Tests
+1. Open the project in Eclipse.
+2. Locate the JUnit test classes, including `GameTest.java`, `LinkedQueueTest.java`, `CustomerTest.java`, and `OrderTest.java`.
+3. Right-click a test class and select **Run As → JUnit Test**.
+4. Repeat for the other test classes or run the full test suite.
+5. The model tests run without opening the GUI because the model does not depend on the view.
+
+
 ## Reflection
 - What changed from your specification? ServeResult gained two new values which are REJECTED_IMPATIENT for serving an impatient customer at the window the normal way, and REJECTED_NOT_IMPATIENT for serveFree on customer who is still waiting.
 - Did the model really stand alone? Yes, because currently there is no view code in the model, nothing in model refers to view or controller. 
