@@ -21,10 +21,10 @@
 | Game | Matthew Li | Drafted and wrote with GenAI Assistance, GenAI did JavaDocs |
 | LinkedQueue | Matthew Li |  Drafted and wrote with GenAI Assistance, GenAI did JavaDocs |
 | Customer | Matthew Li | Drafted and wrote with GenAI Assistance, GenAI did JavaDocs |
-| Order | Matthew Lee |   |
-| MenuItem | Matthew Lee |  |
-| CustomerState | Matthew Lee |  |
-| ServeResult | Mathew Lee |    |
+| Order | Matthew Lee | Written and checked with GenAi assistance, JavaDocs done by GenAI  |
+| MenuItem | Matthew Lee | Written and checked with GenAi assistance, JavaDocs done by GenAI |
+| CustomerState | Matthew Lee | Written and checked with GenAi assistance, JavaDocs done by GenAI |
+| ServeResult | Mathew Lee |  Written and checked with GenAi assistance, JavaDocs done by GenAI  |
 | GameListener | Sravan |  |
 | GameWindow | Sravan  |    |
 | GameController | Sravan |     |
