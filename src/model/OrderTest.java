@@ -100,15 +100,20 @@ public class OrderTest extends student.TestCase
     public void testDefensiveCopy()
     {
         Map<MenuItem, Integer> items = new EnumMap<MenuItem, Integer>(MenuItem.class);
+
         items.put(MenuItem.BURGER, 1);
 
         Order newOrder = new Order(items);
 
+        // Change the original map
         items.put(MenuItem.BURGER, 5);
+        items.put(MenuItem.DRINK, 2);
 
-        assertEquals(Integer.valueOf(1),
-            newOrder.getItems().get(MenuItem.BURGER));
-    }
+        // The order should remain unchanged
+        assertEquals(Integer.valueOf(1), newOrder.getItems().get(MenuItem.BURGER));
+
+        assertFalse(newOrder.getItems().containsKey(MenuItem.DRINK));
+}
 
 
     /**

@@ -72,16 +72,10 @@ public class Order
      *
      * @param tray the player's prepared food
      * @return the result of comparing the order and tray
-     * @throws IllegalArgumentException if tray is null
      */
     public ServeResult compareToTray(Map<MenuItem, Integer> tray)
     {
-        if (tray == null)
-        {
-            throw new IllegalArgumentException("Tray must not be null");
-        }
-
-        if (tray.isEmpty())
+        if (tray == null || tray.isEmpty())
         {
             return ServeResult.FAILED_ORDER;
         }
