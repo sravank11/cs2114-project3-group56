@@ -1,5 +1,11 @@
 # cs2114-project3-group56
 
+## How to Run
+- Clone the repo to eclipse
+- Open src/app/Main.java
+- Right click Main.java and run as a Java Application
+- Right click any tests and run as JUnit test
+
 ## Reflection
 - What changed from your specification? ServeResult gained two new values which are REJECTED_IMPATIENT for serving an impatient customer at the window the normal way, and REJECTED_NOT_IMPATIENT for serveFree on customer who is still waiting.
 - Did the model really stand alone? Yes, because currently there is no view code in the model, nothing in model refers to view or controller. 
