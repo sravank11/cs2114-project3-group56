@@ -8,8 +8,10 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.AlphaComposite;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +19,8 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.Timer;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -67,6 +71,12 @@ public class GameWindow extends JFrame implements GameListener
     private final JButton restartButton = styled(new JButton("Play Again"), ACCENT);
     // The only view state: which customer the player has picked
     private int selectedId = -1;
+    // Animation-only memory, used to notice score and strike changes
+    private int lastScore;
+    private int lastStrikes;
+    private final Effects effects = new Effects();
+    private final Timer animator;
+    private long lastFrameNs = System.nanoTime();
 
     /**
      * Builds the window with no restart option.
@@ -119,8 +129,64 @@ public class GameWindow extends JFrame implements GameListener
         add(middle, BorderLayout.CENTER);
 
         add(buildControls(), BorderLayout.SOUTH);
+        setGlassPane(effects);
+        effects.setVisible(true);
+        lastScore = game.getScore();
+        lastStrikes = game.getStrikes();
         game.addListener(this);
         refresh();
+        animator = new Timer(16, event -> frame());
+        animator.start();
+    }
+
+    @Override
+    public void dispose()
+    {
+        animator.stop();
+        super.dispose();
+    }
+
+    /** Advances every animation by the time since the last frame. */
+    private void frame()
+    {
+        long now = System.nanoTime();
+        double dt = Math.min(0.1, (now - lastFrameNs) / 1e9);
+        lastFrameNs = now;
+        for (CustomerCard card : cards.values())
+        {
+            card.animate(dt);
+        }
+        effects.tick(dt);
+    }
+
+    /** Starts a floating score text and a colored flash when the score or
+     * strikes changed since the last refresh. */
+    private void playResultEffects()
+    {
+        int score = game.getScore();
+        int strikes = game.getStrikes();
+        int x = cardRow.getParent() == null ? getWidth() / 2
+            : SwingUtilities.convertPoint(cardRow.getParent(),
+                cardRow.getParent().getWidth() / 2, 40, effects).x;
+        int y = cardRow.getParent() == null ? 200
+            : SwingUtilities.convertPoint(cardRow.getParent(), 0, 40,
+                effects).y + 60;
+        if (score > lastScore)
+        {
+            effects.floatText("+" + (score - lastScore), GOOD, x, y);
+            effects.flash(GOOD, 0.18f);
+        }
+        else if (score < lastScore)
+        {
+            effects.floatText("-" + (lastScore - score), BAD, x, y);
+        }
+        if (strikes > lastStrikes)
+        {
+            effects.floatText("STRIKE!", BAD, x, y - 40);
+            effects.flash(BAD, 0.35f);
+        }
+        lastScore = score;
+        lastStrikes = strikes;
     }
 
     private static JButton styled(JButton button, Color color)
@@ -272,6 +338,7 @@ public class GameWindow extends JFrame implements GameListener
     /** Re-reads the whole game and updates every component. */
     private void refresh()
     {
+        playResultEffects();
         List<Customer> customers = game.getCustomers();
         syncCards(customers);
         if (!cards.containsKey(selectedId))
@@ -387,6 +454,9 @@ public class GameWindow extends JFrame implements GameListener
         private final JLabel status = new JLabel();
         private final JLabel order = new JLabel();
         private double fraction = 1.0;
+        private double shown = -1;
+        private boolean impatient;
+        private double pulse;
         private Color barColor = GOOD;
 
         CustomerCard(int id)
@@ -422,7 +492,7 @@ public class GameWindow extends JFrame implements GameListener
                     .append(entry.getValue()).append("<br>");
             }
             order.setText(lines.append("</html>").toString());
-            boolean impatient = c.getState() == CustomerState.IMPATIENT;
+            impatient = c.getState() == CustomerState.IMPATIENT;
             status.setText(impatient ? "IMPATIENT!" : String.format(
                 "%.1fs left", c.getPatienceMs() / 1000.0));
             fraction = c.getMaxPatienceMs() <= 0 ? 0
@@ -434,6 +504,18 @@ public class GameWindow extends JFrame implements GameListener
                 BorderFactory.createLineBorder(
                     selected ? ACCENT : new Color(0xD8C8B0), selected ? 4 : 1),
                 BorderFactory.createEmptyBorder(8, 10, 18, 10)));
+            if (shown < 0)
+            {
+                shown = fraction;
+            }
+            repaint();
+        }
+
+        /** Eases the bar toward the model's value and pulses if impatient. */
+        void animate(double dt)
+        {
+            shown += (fraction - shown) * Math.min(1.0, dt * 10);
+            pulse += dt * 6;
             repaint();
         }
 
@@ -444,12 +526,114 @@ public class GameWindow extends JFrame implements GameListener
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
+            if (impatient)
+            {
+                float alpha = (float) (0.12 + 0.12 * Math.sin(pulse));
+                g2.setComposite(AlphaComposite.getInstance(
+                    AlphaComposite.SRC_OVER, alpha));
+                g2.setColor(BAD);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                g2.setComposite(AlphaComposite.SrcOver);
+            }
             int w = getWidth() - 20;
             int y = getHeight() - 20;
             g2.setColor(new Color(0xE6DCCB));
             g2.fillRoundRect(10, y, w, 10, 10, 10);
             g2.setColor(barColor);
-            g2.fillRoundRect(10, y, (int) (w * fraction), 10, 10, 10);
+            g2.fillRoundRect(10, y, (int) (w * Math.max(0, shown)), 10, 10, 10);
+            g2.dispose();
+        }
+    }
+
+    /** Transparent overlay that draws floating texts and screen flashes.
+     * It never takes mouse input. */
+    private static class Effects extends JComponent
+    {
+        private static final double TEXT_SECONDS = 1.0;
+        private static final double FLASH_SECONDS = 0.4;
+
+        private static class FloatingText
+        {
+            String text;
+            Color color;
+            int x;
+            int y;
+            double age;
+        }
+
+        private final List<FloatingText> texts = new ArrayList<>();
+        private Color flashColor = BAD;
+        private float flashPeak;
+        private double flashAge = FLASH_SECONDS;
+
+        Effects()
+        {
+            setOpaque(false);
+        }
+
+        void floatText(String text, Color color, int x, int y)
+        {
+            FloatingText t = new FloatingText();
+            t.text = text;
+            t.color = color;
+            t.x = x;
+            t.y = y;
+            texts.add(t);
+        }
+
+        void flash(Color color, float peak)
+        {
+            flashColor = color;
+            flashPeak = peak;
+            flashAge = 0;
+        }
+
+        void tick(double dt)
+        {
+            boolean active = flashAge < FLASH_SECONDS || !texts.isEmpty();
+            if (!active)
+            {
+                return;
+            }
+            flashAge += dt;
+            for (FloatingText t : texts)
+            {
+                t.age += dt;
+            }
+            texts.removeIf(t -> t.age >= TEXT_SECONDS);
+            repaint();
+        }
+
+        @Override
+        public boolean contains(int x, int y)
+        {
+            return false;
+        }
+
+        @Override
+        protected void paintComponent(Graphics g)
+        {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
+            if (flashAge < FLASH_SECONDS)
+            {
+                float a = flashPeak * (float) (1 - flashAge / FLASH_SECONDS);
+                g2.setComposite(AlphaComposite.getInstance(
+                    AlphaComposite.SRC_OVER, Math.max(0f, Math.min(1f, a))));
+                g2.setColor(flashColor);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+            }
+            g2.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 40));
+            for (FloatingText t : texts)
+            {
+                double p = t.age / TEXT_SECONDS;
+                g2.setComposite(AlphaComposite.getInstance(
+                    AlphaComposite.SRC_OVER, (float) Math.max(0, 1 - p * p)));
+                g2.setColor(t.color);
+                int w = g2.getFontMetrics().stringWidth(t.text);
+                g2.drawString(t.text, t.x - w / 2, t.y - (int) (70 * p));
+            }
             g2.dispose();
         }
     }
