@@ -23,7 +23,22 @@ For model tests, right-click `src/model/LinkedQueueTest.java`, `GameTest.java`, 
 1. Run all JUnit tests with the course library and fix any failures; verify each scope bad-input case (Matthew Li and Matthew Lee).
 2. Manually check the GUI, VIP ordering, patience, serving, refunds, restart, and game-over behavior (Sravan; all members review).
 3. Add difficulty settings if time allows (Matthew Li). Add persistent high scores if time allows (Matthew Lee). VIP priority lane is the committed change feature (Sravan). Other unimplemented stretch goals are deferred.
-4. Prepare the three-minute demo: launch Order Rush and explain controls(30 sec), add a regular customer(30 sec), add a VIP(15 sec), show the VIP move to the front(15 sec), try serving the regular customer (rejected)(30 sec), serve the VIP(30 sec), then show score and patience behavior (all members)(30 sec).
+4. Prepare the three-minute demo: launch Order Rush and explain controls, add a regular customer, add a VIP, show the VIP move to the front, try serving the regular customer (rejected), serve the VIP, then show score and patience behavior (all members).
+
+<table>
+  <thead>
+    <tr><th>Time</th><th>Demo Action</th><th>
+  </thead>
+  <tbody>
+    <tr><td>0:00-0:30</td><td>Launch game and explain controls</td><td>
+    <tr><td>0:30-1:00</td><td>Show regular customer arriving</td><td>
+    <tr><td>1:00-1:30</td><td>Add VIP and demonstrate priority</td><td>
+    <tr><td>1:30-2:00</td><td>Prepare and serve VIP order</td><td>
+    <tr><td>2:00-2:30</td><td>Demonstrate patience and penalties</td><td>
+    <tr><td>2:30-3:00</td><td>Show score, game over, and restart</td><td>
+  </tbody>
+</table>
+
 
 ## Attribution
 
