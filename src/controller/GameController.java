@@ -44,6 +44,12 @@ public class GameController
         clock.stop();
     }
 
+    /** Adds a priority-lane customer through the model. */
+    public void vipClicked()
+    {
+        game.spawnVipCustomer();
+    }
+
     public void foodClicked(MenuItem item)
     {
         if (item == null)

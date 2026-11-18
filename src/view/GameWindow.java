@@ -83,6 +83,7 @@ public class GameWindow extends JFrame implements GameListener
     private final JButton serveButton = styled(new JButton("Serve Order"), ACCENT);
     private final JButton freeButton = styled(new JButton("Serve Free"), GOOD);
     private final JButton refundButton = styled(new JButton("Refund"), BAD);
+    private final JButton vipButton = styled(new JButton("Add VIP Customer"), GOOD);
     private final JButton clearButton = styled(new JButton("Clear Tray"), INK);
     private final JButton restartButton = styled(new JButton("Play Again"), ACCENT);
     // The only view state: which customer the player has picked
@@ -286,6 +287,8 @@ public class GameWindow extends JFrame implements GameListener
         }
         clearButton.addActionListener(event -> controller.clearClicked());
         foods.add(clearButton);
+        vipButton.addActionListener(event -> controller.vipClicked());
+        foods.add(vipButton);
         controls.add(foods);
         controls.add(Box.createVerticalStrut(8));
 
@@ -374,7 +377,7 @@ public class GameWindow extends JFrame implements GameListener
         for (int i = 0; i < customers.size(); i++)
         {
             Customer c = customers.get(i);
-            cards.get(c.getId()).update(c, i == 0, c.getId() == selectedId);
+            cards.get(c.getId()).update(c, i == 0, c.getId() == selectedId, game.isVip(c.getId()));
         }
 
         scoreLabel.setText("Score: " + game.getScore());
@@ -392,6 +395,7 @@ public class GameWindow extends JFrame implements GameListener
             button.setEnabled(active);
         }
         clearButton.setEnabled(active && !game.getTray().isEmpty());
+        vipButton.setEnabled(active);
         Customer selected = null;
         for (Customer c : customers)
         {
@@ -526,9 +530,9 @@ public class GameWindow extends JFrame implements GameListener
                 java.awt.Cursor.HAND_CURSOR));
         }
 
-        void update(Customer c, boolean front, boolean selected)
+        void update(Customer c, boolean front, boolean selected, boolean vip)
         {
-            title.setText("#" + c.getId() + (front ? "  🔔 AT WINDOW" : ""));
+            title.setText((vip ? "VIP " : "") + "#" + c.getId() + (front ? "  🔔 AT WINDOW" : ""));
             StringBuilder lines = new StringBuilder("<html>");
             for (Map.Entry<MenuItem, Integer> entry
                 : c.getOrder().getItems().entrySet())
