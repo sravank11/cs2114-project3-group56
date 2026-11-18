@@ -13,6 +13,7 @@
 ### Running the Model Tests
 1. Open the project in Eclipse.
 2. Locate the JUnit test classes, including `GameTest.java`, `LinkedQueueTest.java`, `CustomerTest.java`, and `OrderTest.java`.
+2. Locate the JUnit test classes, including `GameTest.java`, `LinkedQueueTest.java`, `CustomerTest.java`, and `OrderTest.java`, and `GameControllerTest.java` (controller → model, no window opened).
 3. Right-click a test class and select **Run As → JUnit Test**.
 4. Repeat for the other test classes or run the full test suite.
 5. The model tests run without opening the GUI because the model does not depend on the view.
@@ -43,9 +44,18 @@
 | MenuItem | Matthew Lee | Written and checked with GenAi assistance, JavaDocs done by GenAI |
 | CustomerState | Matthew Lee | Written and checked with GenAi assistance, JavaDocs done by GenAI |
 | ServeResult | Mathew Lee |  Written and checked with GenAi assistance, JavaDocs done by GenAI  |
+<<<<<<< HEAD
 | GameListener | Sravan | Drafted and wrote with GenAI Assistance, GenAI did JavaDocs |
 | GameWindow | Sravan  |  Drafted and wrote with GenAI Assistance, GenAI did JavaDocs  |
 | GameController | Sravan |  Drafted and wrote with GenAI Assistance, GenAI did JavaDocs   |
 | Main | Sravan |   Drafted and wrote with GenAI Assistance, GenAI did JavaDocs  |
+=======
+| GameListener | Sravan |  |
+| GameWindow | Sravan  |    |
+| GameController | Sravan |     |
+| Main | Sravan |     |
+| GameControllerTest | Matthew Li | Wrote tests that click through GameController into the Game model (normal and bad input); GenAI-assisted draft, reviewed by Matthew Li |
+
+>>>>>>> 5a39fd719c524668012a2bb389e5b23b0ad53b57
 
 GenAI Note: Used to assist in writing code and formatting JavaDocs
