@@ -23,7 +23,7 @@ For model tests, right-click `src/model/LinkedQueueTest.java`, `GameTest.java`, 
 1. Run all JUnit tests with the course library and fix any failures; verify each scope bad-input case (Matthew Li and Matthew Lee).
 2. Manually check the GUI, VIP ordering, patience, serving, refunds, restart, and game-over behavior (Sravan; all members review).
 3. Add difficulty settings if time allows (Matthew Li). Add persistent high scores if time allows (Matthew Lee). VIP priority lane is the committed change feature (Sravan). Other unimplemented stretch goals are deferred.
-4. Prepare the three-minute demo: launch Order Rush, add a regular customer, add a VIP, show the VIP move to the front, try serving the regular customer (rejected), serve the VIP, then show score and patience behavior (all members).
+4. Prepare the three-minute demo: launch Order Rush and explain controls(30 sec), add a regular customer(30 sec), add a VIP(15 sec), show the VIP move to the front(15 sec), try serving the regular customer (rejected)(30 sec), serve the VIP(30 sec), then show score and patience behavior (all members)(30 sec).
 
 ## Attribution
 
