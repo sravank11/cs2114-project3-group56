@@ -113,6 +113,42 @@ public class LinkedQueueTest
 
 
     /**
+     * Tests dequeue and peek on a brand-new empty queue return null and
+     * leave the queue empty.
+     */
+    public void testDequeuePeekOnEmpty()
+    {
+        assertNull(queue.dequeue());
+        assertNull(queue.peek());
+        assertEquals(0, queue.size());
+        assertTrue(queue.isEmpty());
+    }
+
+
+    /**
+     * Tests first-in-first-out order is kept when enqueues and dequeues
+     * are interleaved.
+     */
+    public void testInterleavedEnqueueDequeueOrder()
+    {
+        queue.enqueue("a");
+        queue.enqueue("b");
+        assertEquals("a", queue.dequeue());
+        queue.enqueue("c");
+        assertEquals("b", queue.peek());
+        queue.enqueue("d");
+        assertEquals("b", queue.dequeue());
+        assertEquals("c", queue.dequeue());
+        queue.enqueue("e");
+        assertEquals(2, queue.size());
+        assertEquals("d", queue.dequeue());
+        assertEquals("e", queue.dequeue());
+        assertNull(queue.dequeue());
+        assertTrue(queue.isEmpty());
+    }
+
+
+    /**
      * Tests peek does not remove the front item.
      */
     public void testPeek()
