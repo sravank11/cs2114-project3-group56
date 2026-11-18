@@ -12,7 +12,6 @@
 
 ### Running the Model Tests
 1. Open the project in Eclipse.
-2. Locate the JUnit test classes, including `GameTest.java`, `LinkedQueueTest.java`, `CustomerTest.java`, and `OrderTest.java`.
 2. Locate the JUnit test classes, including `GameTest.java`, `LinkedQueueTest.java`, `CustomerTest.java`, and `OrderTest.java`, and `GameControllerTest.java` (controller → model, no window opened).
 3. Right-click a test class and select **Run As → JUnit Test**.
 4. Repeat for the other test classes or run the full test suite.

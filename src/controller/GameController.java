@@ -46,6 +46,10 @@ public class GameController
 
     public void foodClicked(MenuItem item)
     {
+        if (item == null)
+        {
+            return;
+        }
         game.addFood(item);
     }
 
