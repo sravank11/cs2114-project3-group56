@@ -48,6 +48,8 @@ public class Game
     public static final int MAX_ORDER_ITEMS = 3;
 
     private final LinkedQueue<Customer> line;
+    private final LinkedQueue<Customer> vipLine;
+    private final java.util.Set<Integer> vipIds = new java.util.HashSet<Integer>();
     private final Map<MenuItem, Integer> tray;
     private final Random rng;
     private final List<GameListener> listeners;
@@ -82,6 +84,7 @@ public class Game
         this.rng = rng;
         this.spawnIntervalMs = spawnIntervalMs;
         this.line = new LinkedQueue<Customer>();
+        this.vipLine = new LinkedQueue<Customer>();
         this.tray = new EnumMap<MenuItem, Integer>(MenuItem.class);
         this.listeners = new ArrayList<GameListener>();
         this.score = 0;
@@ -131,7 +134,7 @@ public class Game
         // Collect first, then add strikes, because the third strike ends
         // the game and empties the line we would still be iterating.
         List<Customer> ranOut = new ArrayList<Customer>();
-        for (Customer customer : line)
+        for (Customer customer : getCustomers())
         {
             boolean wasWaiting = customer.getState() == CustomerState.WAITING;
             customer.decreasePatience(elapsedMs);
@@ -186,6 +189,28 @@ public class Game
      * @return true if the item was added, false if the game is over
      * @throws IllegalArgumentException if item is null
      */
+    /** Adds a VIP to the separate priority lane. VIPs are served first. */
+    public Customer spawnVipCustomer()
+    {
+        if (gameOver)
+        {
+            return null;
+        }
+        int patience = MIN_PATIENCE_MS
+            + rng.nextInt(MAX_PATIENCE_MS - MIN_PATIENCE_MS + 1);
+        Customer vip = new Customer(nextCustomerId++, randomOrder(), patience);
+        vipLine.enqueue(vip);
+        vipIds.add(vip.getId());
+        notifyListeners("VIP #" + vip.getId() + " joined the priority lane");
+        return vip;
+    }
+
+    /** Returns whether the given customer belongs to the VIP lane. */
+    public boolean isVip(int customerId)
+    {
+        return vipIds.contains(customerId);
+    }
+
     public boolean addFood(MenuItem item)
     {
         if (item == null)
@@ -236,7 +261,7 @@ public class Game
             return reject(ServeResult.REJECTED_GAME_OVER,
                 "The game is over");
         }
-        if (line.isEmpty())
+        if (getFrontCustomer() == null)
         {
             tray.clear();
             return reject(ServeResult.REJECTED_NO_CUSTOMER,
@@ -248,7 +273,7 @@ public class Game
             return reject(ServeResult.REJECTED_ALREADY_HANDLED,
                 "That customer has already left");
         }
-        if (customer != line.peek())
+        if (customer != getFrontCustomer())
         {
             return reject(ServeResult.REJECTED_NOT_FRONT,
                 "Only the customer at the window can be served");
@@ -262,7 +287,14 @@ public class Game
 
         ServeResult result = customer.getOrder().compareToTray(getTray());
         tray.clear();
-        line.dequeue();
+        if (isVip(customerId))
+        {
+            vipLine.dequeue();
+        }
+        else
+        {
+            line.dequeue();
+        }
         String message;
         if (result == ServeResult.SERVED_OK)
         {
@@ -320,7 +352,14 @@ public class Game
                 "Customer #" + customerId + " is still waiting patiently");
         }
         customer.setState(CustomerState.SERVED);
-        line.remove(customer);
+        if (isVip(customerId))
+        {
+            vipLine.remove(customer);
+        }
+        else
+        {
+            line.remove(customer);
+        }
         notifyListeners("Customer #" + customerId + " served for free");
         return ServeResult.SERVED_OK;
     }
@@ -346,7 +385,14 @@ public class Game
             return false;
         }
         customer.setState(CustomerState.REMOVED);
-        line.remove(customer);
+        if (isVip(customerId))
+        {
+            vipLine.remove(customer);
+        }
+        else
+        {
+            line.remove(customer);
+        }
         addPoints(-REFUND_PENALTY);
         notifyListeners("Customer #" + customerId + " refunded, -"
             + REFUND_PENALTY);
@@ -390,7 +436,7 @@ public class Game
      */
     public Customer getFrontCustomer()
     {
-        return line.peek();
+        return vipLine.isEmpty() ? line.peek() : vipLine.peek();
     }
 
     /**
@@ -400,7 +446,11 @@ public class Game
      */
     public List<Customer> getCustomers()
     {
-        List<Customer> snapshot = new ArrayList<Customer>(line.size());
+        List<Customer> snapshot = new ArrayList<Customer>(line.size() + vipLine.size());
+        for (Customer customer : vipLine)
+        {
+            snapshot.add(customer);
+        }
         for (Customer customer : line)
         {
             snapshot.add(customer);
@@ -473,6 +523,13 @@ public class Game
                 return customer;
             }
         }
+        for (Customer customer : vipLine)
+        {
+            if (customer.getId() == customerId)
+            {
+                return customer;
+            }
+        }
         return null;
     }
 
@@ -508,6 +565,10 @@ public class Game
         while (!line.isEmpty())
         {
             line.dequeue().setState(CustomerState.FAILED);
+        }
+        while (!vipLine.isEmpty())
+        {
+            vipLine.dequeue().setState(CustomerState.FAILED);
         }
         tray.clear();
     }
