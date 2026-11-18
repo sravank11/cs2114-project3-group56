@@ -61,8 +61,24 @@ public class GameWindow extends JFrame implements GameListener
     private final JLabel strikesLabel = new JLabel();
     private final JLabel trayLabel = new JLabel();
     private final JLabel messageLabel = new JLabel("Welcome to Order Rush!");
-    private final JPanel cardRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 12));
+    private static final int CARD_W = 190;
+    private static final int CARD_H = 170;
+    private static final int GAP = 12;
+    /** Holds the customer cards at animated positions (no layout manager). */
+    private final JPanel cardRow = new JPanel(null)
+    {
+        @Override
+        public Dimension getPreferredSize()
+        {
+            return new Dimension(GAP + live.size() * (CARD_W + GAP),
+                CARD_H + 2 * GAP);
+        }
+    };
     private final Map<Integer, CustomerCard> cards = new HashMap<>();
+    /** Cards for customers currently in the line, front first. */
+    private final List<CustomerCard> live = new ArrayList<>();
+    /** Cards still sliding or fading out after their customer left. */
+    private final List<CustomerCard> leaving = new ArrayList<>();
     private final java.util.List<JButton> foodButtons = new java.util.ArrayList<>();
     private final JButton serveButton = styled(new JButton("Serve Order"), ACCENT);
     private final JButton freeButton = styled(new JButton("Serve Free"), GOOD);
@@ -152,9 +168,19 @@ public class GameWindow extends JFrame implements GameListener
         long now = System.nanoTime();
         double dt = Math.min(0.1, (now - lastFrameNs) / 1e9);
         lastFrameNs = now;
-        for (CustomerCard card : cards.values())
+        for (int i = 0; i < live.size(); i++)
         {
-            card.animate(dt);
+            live.get(i).animate(dt, GAP + i * (CARD_W + GAP));
+        }
+        for (CustomerCard card : new ArrayList<>(leaving))
+        {
+            card.animate(dt, -CARD_W * 2);
+            if (card.isGone())
+            {
+                leaving.remove(card);
+                cardRow.remove(card);
+                cardRow.repaint();
+            }
         }
         effects.tick(dt);
     }
@@ -391,28 +417,33 @@ public class GameWindow extends JFrame implements GameListener
         }
     }
 
-    /** Adds and removes cards only when the line's membership or order
-     * changed, so clicks aren't lost to constantly rebuilt components. */
+    /** Creates cards for new customers (they slide in from the right) and
+     * sends cards of departed customers off (they slide out to the left
+     * unless they were served in time, in which case they fade out). */
     private void syncCards(List<Customer> customers)
     {
-        boolean same = customers.size() == cardRow.getComponentCount();
+        boolean same = customers.size() == live.size();
         for (int i = 0; same && i < customers.size(); i++)
         {
-            same = cardRow.getComponent(i) == cards.get(customers.get(i).getId());
+            same = live.get(i) == cards.get(customers.get(i).getId());
         }
         if (same)
         {
             return;
         }
-        cardRow.removeAll();
         Map<Integer, CustomerCard> next = new HashMap<>();
+        List<CustomerCard> nextLive = new ArrayList<>();
         for (Customer c : customers)
         {
-            CustomerCard card = cards.get(c.getId());
+            CustomerCard card = cards.remove(c.getId());
             if (card == null)
             {
                 final int id = c.getId();
-                card = new CustomerCard(id);
+                card = new CustomerCard(c);
+                int startX = Math.max(getWidth(),
+                    GAP + customers.size() * (CARD_W + GAP));
+                card.setBounds(startX, GAP, CARD_W, CARD_H);
+                card.setX(startX);
                 card.addMouseListener(new MouseAdapter()
                 {
                     @Override
@@ -422,12 +453,20 @@ public class GameWindow extends JFrame implements GameListener
                         refresh();
                     }
                 });
+                cardRow.add(card);
             }
             next.put(c.getId(), card);
-            cardRow.add(card);
+            nextLive.add(card);
+        }
+        for (CustomerCard gone : cards.values())
+        {
+            gone.startLeaving();
+            leaving.add(gone);
         }
         cards.clear();
         cards.putAll(next);
+        live.clear();
+        live.addAll(nextLive);
         cardRow.revalidate();
         cardRow.repaint();
     }
@@ -459,9 +498,16 @@ public class GameWindow extends JFrame implements GameListener
         private double pulse;
         private Color barColor = GOOD;
 
-        CustomerCard(int id)
+        private final Customer customer;
+        private double x;
+        private boolean leavingNow;
+        private boolean fadeOut;
+        private double fade = 1.0;
+
+        CustomerCard(Customer customer)
         {
-            setPreferredSize(new Dimension(190, 170));
+            this.customer = customer;
+            setPreferredSize(new Dimension(CARD_W, CARD_H));
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             setBackground(PANEL);
             title.setFont(MID);
@@ -511,12 +557,51 @@ public class GameWindow extends JFrame implements GameListener
             repaint();
         }
 
-        /** Eases the bar toward the model's value and pulses if impatient. */
-        void animate(double dt)
+        void setX(double newX)
+        {
+            x = newX;
+        }
+
+        /** Called once when the customer has left the line. A customer
+         * served in time fades out in place; anyone else slides left. */
+        void startLeaving()
+        {
+            leavingNow = true;
+            fadeOut = customer.getState() == CustomerState.SERVED
+                && !impatient;
+        }
+
+        boolean isGone()
+        {
+            return fadeOut ? fade <= 0 : x <= -CARD_W;
+        }
+
+        /** Slides toward targetX, eases the bar toward the model's value
+         * and pulses if impatient. */
+        void animate(double dt, double targetX)
         {
             shown += (fraction - shown) * Math.min(1.0, dt * 10);
             pulse += dt * 6;
+            if (leavingNow && fadeOut)
+            {
+                fade -= dt * 3;
+            }
+            else
+            {
+                x += (targetX - x) * Math.min(1.0, dt * 8);
+            }
+            setLocation((int) Math.round(x), GAP);
             repaint();
+        }
+
+        @Override
+        public void paint(Graphics g)
+        {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
+                (float) Math.max(0, Math.min(1, fade))));
+            super.paint(g2);
+            g2.dispose();
         }
 
         @Override
